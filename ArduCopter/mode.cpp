@@ -653,7 +653,35 @@ void Mode::land_run_vertical_control(bool pause_descent)
 
 #if AC_PRECLAND_ENABLED
         const bool navigating = pos_control->is_active_xy();
+#if false // argosdyne        
         bool doing_precision_landing = !copter.ap.land_repo_active && copter.precland.target_acquired() && navigating;
+#else
+        bool doing_precision_landing = false;
+        float start_alt = copter.precland.get_start_alti();
+        if (copter.rangefinder_alt_ok() == true)
+        {
+            if (copter.rangefinder_state.alt_cm <= start_alt) 
+            {
+                doing_precision_landing = !copter.ap.land_repo_active && copter.precland.target_acquired() && navigating;
+                if (doing_precision_landing == true)
+                {
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand1: active");
+                }
+                else
+                {
+                    gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand1: Nactive");
+                }
+            }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand1: high");
+            }
+        }
+        else
+        {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand1: no rf");
+        }
+#endif        
 
         if (doing_precision_landing) {
             // prec landing is active
@@ -739,7 +767,45 @@ void Mode::land_run_horizontal_control()
     // this variable will be updated if prec land target is in sight and pilot isn't trying to reposition the vehicle
     copter.ap.prec_land_active = false;
 #if AC_PRECLAND_ENABLED
+#if false // argosdyne
     copter.ap.prec_land_active = !copter.ap.land_repo_active && copter.precland.target_acquired();
+    // check the start altitude of precision-landing
+    if (copter.ap.prec_land_active && copter.rangefinder_alt_ok()) {
+        float start_alt = copter.precland.get_start_alti();
+
+        // If the drone is of out control region of precision landing, then turn off "doing_precision_landing"
+        if (copter.rangefinder_state.alt_cm > start_alt) {
+            copter.ap.prec_land_active = false;
+        }
+    }
+#else
+    float start_alt = copter.precland.get_start_alti();
+    if (copter.rangefinder_alt_ok() == true)
+    {
+        if (copter.rangefinder_state.alt_cm <= start_alt) 
+        {
+            copter.ap.prec_land_active = !copter.ap.land_repo_active && copter.precland.target_acquired();
+            if (copter.ap.prec_land_active == true)
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand0: active");
+            }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand0: Nactive");
+            }
+        }
+        else
+        {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand0: high");
+            copter.ap.prec_land_active = false;
+        }
+    }
+    else
+    {
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "PrecLand0: no rf");
+    }
+#endif    
+
     // run precision landing
     if (copter.ap.prec_land_active) {
         Vector2f target_pos, target_vel;
