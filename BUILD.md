@@ -27,7 +27,7 @@ list some basic and more used commands as example.
     supported and the next section shows how to get a full list of them.
 
     ```sh
-    ./waf configure --board CubeBlack
+    ./waf configure --board AQUILA-3F
     ./waf copter
     ```
 
