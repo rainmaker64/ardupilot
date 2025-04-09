@@ -215,7 +215,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK_CLASS(AP_Camera,            &copter.camera,              update,          50,  75, 111),
 #endif
 #if HAL_CODEV_ESC_ENABLE == ENABLED
-    SCHED_TASK_CLASS(AP_CodevEsc,         &copter.codev_esc,        receive_esc_status, 50,  75, 112),
+    SCHED_TASK_CLASS(AP_CodevEsc,         &copter.codev_esc,        receive_esc_status, 400,  50, 50,
 #endif
 #if HAL_LOGGING_ENABLED
     SCHED_TASK(ten_hz_logging_loop,   10,    350, 114),
@@ -588,6 +588,11 @@ void Copter::ten_hz_logging_loop()
 #if FRAME_CONFIG == HELI_FRAME
     Log_Write_Heli();
 #endif
+
+#if LOG_MOTOR_STATUS == ENABLED
+    logger.Write_MOTORS();
+#endif
+
 #if AP_WINCH_ENABLED
     if (should_log(MASK_LOG_ANY)) {
         g2.winch.write_log();
